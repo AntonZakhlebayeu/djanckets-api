@@ -1,0 +1,43 @@
+version: '3'
+services:
+  api:
+    restart: on-failure
+    volumes:
+      - ./djanckets-backend:/app
+    build:
+      context: ./djanckets-backend/
+      dockerfile: ./Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./djanckets-backend/.env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: "djacketsdb"
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "password"
+    ports:
+      - "5432:5432"
+  
+  client:
+    build:
+      context: ./djanckets-client/djackets/
+      dockerfile: Dockerfile
+    command: yarn serve
+    ports:
+      - '8080:8080'
+    volumes:
+      - './djanckets-client/djackets/:/app'
+      - /app/node_modules 
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
